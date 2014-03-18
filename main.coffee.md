@@ -12,7 +12,7 @@ Tie a widget to an observable.
         value: null
 
       observable = Observable(I.value)
-      widget = window.open I.url, "_blank", "width=#{I.width},height=#{I.height}"
+      widget = window.open I.url, null, "width=#{I.width},height=#{I.height}"
 
       updating = false
       observable.observe (newValue) ->
@@ -23,16 +23,12 @@ Tie a widget to an observable.
           , "*"
 
       listener = ({data, source}) ->
-        if source is widget
-          if value = data.value
-            updating = true
-            observable value
-            updating = false
+        if data.status is "unload"
+          window.removeEventListener "message", listener
+        else if value = data.value
+          observable(value)
 
       window.addEventListener "message", listener
-
-      widget.onunload = ->
-        window.removeEventListener "message", listener
 
       window.addEventListener "unload", ->
         widget.close()
