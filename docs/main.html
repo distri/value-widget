@@ -44,7 +44,7 @@ module.<span class="function"><span class="title">exports</span></span> = (I={})
     value: <span class="literal">null</span>
 
   observable = Observable(I.value)
-  widget = window.open I.url, <span class="literal">null</span>, <span class="string">"width=<span class="subst">#{I.width}</span>,height=<span class="subst">#{I.height}</span>"</span>
+  widget = window.open <span class="string">"<span class="subst">#{I.url}</span>#<span class="subst">#{JSON.stringify(I.value)}</span>"</span>, <span class="literal">null</span>, <span class="string">"width=<span class="subst">#{I.width}</span>,height=<span class="subst">#{I.height}</span>"</span>
 
   updating = <span class="literal">false</span>
   observable.observe (newValue) -&gt;
