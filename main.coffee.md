@@ -12,7 +12,7 @@ Tie a widget to an observable.
         value: null
 
       observable = Observable(I.value)
-      widget = window.open I.url, null, "width=#{I.width},height=#{I.height}"
+      widget = window.open "#{I.url}##{JSON.stringify(I.value)}", null, "width=#{I.width},height=#{I.height}"
 
       updating = false
       observable.observe (newValue) ->
