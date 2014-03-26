@@ -7,13 +7,12 @@ Tie a widget to an observable.
 
     module.exports = (I={}) ->
       defaults I,
+        debug: false
         width: 200
         height: 200
         value: null
 
       observable = Observable(I.value)
-
-      console.log "Initialized Value Widget", I
 
       if I.iframe 
         I.iframe.src = I.url if I.url
@@ -22,7 +21,7 @@ Tie a widget to an observable.
         widget = window.open I.url, null, "width=#{I.width},height=#{I.height}"
 
       send = (method, params...) ->
-        widget.postMessage 
+        widget.postMessage
           method: method
           params: params
         , "*"
@@ -35,7 +34,8 @@ Tie a widget to an observable.
       listener = ({data, source}) ->
         return unless source is widget
 
-        console.log data
+        if I.debug
+          console.log data
 
         if data.status is "ready"
           if I.options
