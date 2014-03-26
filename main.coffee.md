@@ -30,6 +30,8 @@ Tie a widget to an observable.
       observable.observe update
 
       listener = ({data, source}) ->
+        return unless source is widget
+
         if data.status is "ready"
           if I.value?
             update(I.value)
