@@ -21,13 +21,14 @@ Tie a widget to an observable.
       else
         widget = window.open I.url, null, "width=#{I.width},height=#{I.height}"
 
-      send = (data) ->
-        widget.postMessage data, "*"
+      send = (method, params...) ->
+        widget.postMessage 
+          method: method
+          params: params
+        , "*"
 
       update = (newValue) ->
-        send
-          method: "value"
-          params: [newValue]
+        send "value", newValue
 
       observable.observe update
 
@@ -38,9 +39,7 @@ Tie a widget to an observable.
 
         if data.status is "ready"
           if I.options
-            send
-              method: "options"
-              params: I.options
+            send "options", I.options
 
           if I.value?
             update(I.value)
@@ -55,10 +54,7 @@ Tie a widget to an observable.
       window.addEventListener "unload", ->
         widget.close()
 
-      observable.send = (method, params...) ->
-        send
-          method: method
-          params: params
+      observable.send = send
 
       return observable
 
