@@ -35,6 +35,11 @@ Tie a widget to an observable.
         if data.status is "ready"
           if I.value?
             update(I.value)
+
+            if I.options
+              send
+                method: "options"
+                params: I.options
         else if data.status is "unload"
           window.removeEventListener "message", listener
         else if value = data.value
@@ -44,6 +49,11 @@ Tie a widget to an observable.
 
       window.addEventListener "unload", ->
         widget.close()
+
+      observable.send = (method, params...) ->
+        send
+          method: method
+          params: params
 
       return observable
 
