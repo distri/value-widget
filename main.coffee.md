@@ -12,18 +12,28 @@ Tie a widget to an observable.
         value: null
 
       observable = Observable(I.value)
-      widget = window.open "#{I.url}##{JSON.stringify(I.value)}", null, "width=#{I.width},height=#{I.height}"
 
-      updating = false
-      observable.observe (newValue) ->
-        unless updating
-          widget.postMessage
-            method: "value"
-            params: [newValue]
-          , "*"
+      if I.iframe 
+        I.iframe.src = I.url if I.url
+        widget = I.iframe.contentWindow
+      else
+        widget = window.open I.url, null, "width=#{I.width},height=#{I.height}"
+
+      send = (data) ->
+        widget.postMessage data, "*"
+
+      update = (newValue) ->
+        send
+          method: "value"
+          params: [newValue]
+
+      observable.observe update
 
       listener = ({data, source}) ->
-        if data.status is "unload"
+        if data.status is "ready"
+          if I.value?
+            update(I.value)
+        else if data.status is "unload"
           window.removeEventListener "message", listener
         else if value = data.value
           observable(value)
@@ -46,12 +56,30 @@ Helpers
 
       return target
 
+    applyStylesheet = (style, id="primary") ->
+      styleNode = document.createElement("style")
+      styleNode.innerHTML = style
+      styleNode.id = id
+
+      if previousStyleNode = document.head.querySelector("style##{id}")
+        previousStyleNode.parentNode.removeChild(prevousStyleNode)
+
+      document.head.appendChild(styleNode)
+
 Example
 -------
 
-    o = module.exports
-      url: "http://distri.github.io/color-picker/"
-      value: "hsl(180, 100%, 50%)"
+    if PACKAGE.name is "ROOT"
+      applyStylesheet require "./demo"
 
-    o.observe (v) ->
-      console.log v
+      testFrame = document.createElement "iframe"
+
+      document.body.appendChild testFrame
+
+      o = module.exports
+        iframe: testFrame
+        url: "http://distri.github.io/text/"
+        value: "hsl(180, 100%, 50%)"
+
+      o.observe (v) ->
+        console.log v
