@@ -13,6 +13,8 @@ Tie a widget to an observable.
 
       observable = Observable(I.value)
 
+      console.log "Initialized Value Widget", I
+
       if I.iframe 
         I.iframe.src = I.url if I.url
         widget = I.iframe.contentWindow
@@ -35,17 +37,16 @@ Tie a widget to an observable.
         console.log data
 
         if data.status is "ready"
+          if I.options
+            send
+              method: "options"
+              params: I.options
+
           if I.value?
             update(I.value)
 
-            if I.options
-              send
-                method: "options"
-                params: I.options
         else if data.status is "unload"
           window.removeEventListener "message", listener
-        else if data.log
-          console.log data.log
         else if value = data.value
           observable(value)
 
