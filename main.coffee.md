@@ -32,6 +32,8 @@ Tie a widget to an observable.
       listener = ({data, source}) ->
         return unless source is widget
 
+        console.log data
+
         if data.status is "ready"
           if I.value?
             update(I.value)
@@ -42,6 +44,8 @@ Tie a widget to an observable.
                 params: I.options
         else if data.status is "unload"
           window.removeEventListener "message", listener
+        else if data.log
+          console.log data.log
         else if value = data.value
           observable(value)
 
@@ -95,3 +99,5 @@ Example
 
       o.observe (v) ->
         console.log v
+
+      window.o = o
