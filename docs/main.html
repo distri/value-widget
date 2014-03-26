@@ -44,18 +44,28 @@ module.<span class="function"><span class="title">exports</span></span> = (I={})
     value: <span class="literal">null</span>
 
   observable = Observable(I.value)
-  widget = window.open <span class="string">"<span class="subst">#{I.url}</span>#<span class="subst">#{JSON.stringify(I.value)}</span>"</span>, <span class="literal">null</span>, <span class="string">"width=<span class="subst">#{I.width}</span>,height=<span class="subst">#{I.height}</span>"</span>
 
-  updating = <span class="literal">false</span>
-  observable.observe (newValue) -&gt;
-    <span class="keyword">unless</span> updating
-      widget.postMessage
-        method: <span class="string">"value"</span>
-        params: [newValue]
-      , <span class="string">"*"</span>
+  <span class="keyword">if</span> I.iframe 
+    I.iframe.src = I.url <span class="keyword">if</span> I.url
+    widget = I.iframe.contentWindow
+  <span class="keyword">else</span>
+    widget = window.open I.url, <span class="literal">null</span>, <span class="string">"width=<span class="subst">#{I.width}</span>,height=<span class="subst">#{I.height}</span>"</span>
+
+  <span class="function"><span class="title">send</span></span> = (data) -&gt;
+    widget.postMessage data, <span class="string">"*"</span>
+
+  <span class="function"><span class="title">update</span></span> = (newValue) -&gt;
+    send
+      method: <span class="string">"value"</span>
+      params: [newValue]
+
+  observable.observe update
 
   <span class="function"><span class="title">listener</span></span> = ({data, source}) -&gt;
-    <span class="keyword">if</span> data.status <span class="keyword">is</span> <span class="string">"unload"</span>
+    <span class="keyword">if</span> data.status <span class="keyword">is</span> <span class="string">"ready"</span>
+      <span class="keyword">if</span> I.value?
+        update(I.value)
+    <span class="keyword">else</span> <span class="keyword">if</span> data.status <span class="keyword">is</span> <span class="string">"unload"</span>
       window.removeEventListener <span class="string">"message"</span>, listener
     <span class="keyword">else</span> <span class="keyword">if</span> value = data.value
       observable(value)
@@ -97,7 +107,17 @@ module.<span class="function"><span class="title">exports</span></span> = (I={})
       <span class="keyword">unless</span> target.hasOwnProperty(name)
         target[name] = object[name]
 
-  <span class="keyword">return</span> target</code></pre>
+  <span class="keyword">return</span> target
+
+<span class="function"><span class="title">applyStylesheet</span></span> = (style, id=<span class="string">"primary"</span>) -&gt;
+  styleNode = document.createElement(<span class="string">"style"</span>)
+  styleNode.innerHTML = style
+  styleNode.id = id
+
+  <span class="keyword">if</span> previousStyleNode = document.head.querySelector(<span class="string">"style#<span class="subst">#{id}</span>"</span>)
+    previousStyleNode.parentNode.removeChild(prevousStyleNode)
+
+  document.head.appendChild(styleNode)</code></pre>
 </div>
         </li>
         
@@ -123,28 +143,164 @@ module.<span class="function"><span class="title">exports</span></span> = (I={})
               </div>
               
             </div>
-            <div class="content"><pre><code class="lang-coffeescript">o = module.exports
-  url: <span class="string">"http://distri.github.io/color-picker/"</span>
-  value: <span class="string">"hsl(180, 100%, 50%)"</span>
+            <div class="content"><pre><code class="lang-coffeescript"><span class="keyword">if</span> PACKAGE.name <span class="keyword">is</span> <span class="string">"ROOT"</span>
+  applyStylesheet require <span class="string">"./demo"</span>
 
-o.observe (v) -&gt;
-  console.log v</code></pre>
+  testFrame = document.createElement <span class="string">"iframe"</span>
+
+  document.body.appendChild testFrame
+
+  o = module.exports
+    iframe: testFrame
+    url: <span class="string">"http://distri.github.io/text/"</span>
+    value: <span class="string">"hsl(180, 100%, 50%)"</span>
+
+  o.observe (v) -&gt;
+    console.log v</code></pre>
 </div>
         </li>
         
     </ul>
   </div>
   <script src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/coffee-script/1.6.3/coffee-script.min.js"></script>
-<script src="http://www.danielx.net/require/v0.2.2.js"></script><script>
-  $.ajax({
-    url: "http://strd6.github.io/interactive/v0.8.1.jsonp",
-    dataType: "jsonp",
-    jsonpCallback: "STRd6/interactive:v0.8.1",
-    cache: true
-  }).then(function(PACKAGE) {
-    Require.generateFor(PACKAGE)("./" + PACKAGE.entryPoint)
-  })
+<script src="https://cdnjs.cloudflare.com/ajax/libs/coffee-script/1.6.3/coffee-script.min.js"></script><script>
+  (function() {
+  var ErrorReporter, bindUpdates, createEditor, exec, findInteractiveElements, readShebang, runners;
+
+  createEditor = function(code, shebang, section) {
+    var annotationElement, contentElement, editorElement, exampleSection, runtimeElement;
+    exampleSection = $("<li>", {
+      "class": "example"
+    });
+    annotationElement = $("<div>", {
+      "class": "annotation"
+    });
+    editorElement = $("<textarea>", {
+      "class": "annotation",
+      text: code
+    });
+    contentElement = $("<div>", {
+      "class": "content"
+    });
+    runtimeElement = $("<div>", {
+      "class": "output"
+    });
+    contentElement.append(runtimeElement);
+    annotationElement.append(editorElement);
+    exampleSection.append(annotationElement);
+    exampleSection.append(contentElement);
+    section.after(exampleSection);
+    return bindUpdates(shebang, editorElement, runtimeElement);
+  };
+
+  bindUpdates = function(shebang, editorElement, runtimeElement) {
+    return editorElement.on("keyup", function() {
+      var e, report, source;
+      report = ErrorReporter(editorElement);
+      source = editorElement.val();
+      try {
+        runners[shebang]({
+          editorElement: editorElement,
+          source: source,
+          runtimeElement: runtimeElement
+        });
+        return report.clear();
+      } catch (_error) {
+        e = _error;
+        return report(e);
+      }
+    });
+  };
+
+  readShebang = function(source) {
+    var match;
+    if (match = source.match(/^\#\! (.*)\n/)) {
+      return match[1];
+    }
+  };
+
+  ErrorReporter = function(editor) {
+    var reporter;
+    reporter = function(error) {
+      var errorParagraph;
+      if (editor.next().is("p.error")) {
+        return editor.next().text(error);
+      } else {
+        errorParagraph = $("<p>", {
+          "class": "error",
+          text: error.toString()
+        });
+        return editor.after(errorParagraph);
+      }
+    };
+    reporter.clear = function() {
+      if (editor.next().is("p.error")) {
+        return editor.next().remove();
+      }
+    };
+    return reporter;
+  };
+
+  findInteractiveElements = function() {
+    return $("blockquote > pre > code").each(function() {
+      var blockQuoteElement, code, codeElement, sectionElement, shebang;
+      codeElement = $(this);
+      code = codeElement.text();
+      if (shebang = readShebang(code)) {
+        if (!runners[shebang]) {
+          return;
+        }
+        code = code.split("\n").slice(1).join("\n");
+        blockQuoteElement = codeElement.parent().parent();
+        sectionElement = blockQuoteElement.parent().parent();
+        blockQuoteElement.remove();
+        return createEditor(code, shebang, sectionElement);
+      }
+    });
+  };
+
+  runners = {};
+
+  (typeof window !== "undefined" && window !== null ? window : global).Interactive = {
+    register: function(name, runner) {
+      runners[name] = runner;
+      findInteractiveElements();
+      return $('#container').on('keyup', 'textarea', function() {
+        $(this).height(0);
+        return $(this).height(this.scrollHeight);
+      }).find('textarea').keyup();
+    }
+  };
+
+  exec = function(_arg) {
+    var code, editorElement, runtimeElement, source;
+    source = _arg.source, code = _arg.code, editorElement = _arg.editorElement, runtimeElement = _arg.runtimeElement;
+    runtimeElement.remove();
+    editorElement.replaceWith($("<pre>", {
+      text: source
+    }));
+    return setTimeout(function() {
+      return Function(code)();
+    }, 0);
+  };
+
+  Interactive.register("setup", function(params) {
+    params.code = CoffeeScript.compile(params.source);
+    return exec(params);
+  });
+
+  Interactive.register("setup-js", function(params) {
+    params.code = params.source;
+    return exec(params);
+  });
+
+  $(function() {
+    return findInteractiveElements();
+  });
+
+}).call(this);
+
+//# sourceURL=interactive.coffee
 </script><script src="package.js"></script>
 </body>
 </html>
