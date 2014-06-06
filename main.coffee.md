@@ -14,7 +14,7 @@ Tie a widget to an observable.
 
       observable = Observable(I.value)
 
-      if I.iframe 
+      if I.iframe
         I.iframe.src = I.url if I.url
         widget = I.iframe.contentWindow
       else
@@ -29,7 +29,10 @@ Tie a widget to an observable.
       update = (newValue) ->
         send "value", newValue
 
-      observable.observe update
+      updating = false
+      observable.observe (newValue) ->
+        unless updating
+          update(newValue)
 
       listener = ({data, source}) ->
         return unless source is widget
@@ -47,12 +50,14 @@ Tie a widget to an observable.
         else if data.status is "unload"
           window.removeEventListener "message", listener
         else if value = data.value
+          updating = true
           observable(value)
+          updating = false
 
       window.addEventListener "message", listener
 
       window.addEventListener "unload", ->
-        widget.close()
+        widget?.close()
 
       observable.send = send
 
