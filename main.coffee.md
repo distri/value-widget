@@ -14,6 +14,7 @@ Tie a widget to an observable.
 
       observable = Observable(I.value)
 
+      widget = null
       if I.iframe
         I.iframe.addEventListener "load", ->
           widget = I.iframe.contentWindow
