@@ -46,6 +46,7 @@ module.<span class="function"><span class="title">exports</span></span> = (I={})
 
   observable = Observable(I.value)
 
+  widget = <span class="literal">null</span>
   <span class="keyword">if</span> I.iframe
     I.iframe.addEventListener <span class="string">"load"</span>, -&gt;
       widget = I.iframe.contentWindow
