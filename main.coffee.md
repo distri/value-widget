@@ -57,7 +57,7 @@ Tie a widget to an observable.
       window.addEventListener "message", listener
 
       window.addEventListener "unload", ->
-        widget.close()
+        widget?.close()
 
       observable.send = send
 
