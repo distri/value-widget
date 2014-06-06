@@ -89,7 +89,7 @@ module.<span class="function"><span class="title">exports</span></span> = (I={})
   window.addEventListener <span class="string">"message"</span>, listener
 
   window.addEventListener <span class="string">"unload"</span>, -&gt;
-    widget.close()
+    widget?.close()
 
   observable.send = send
 
@@ -304,23 +304,19 @@ module.<span class="function"><span class="title">exports</span></span> = (I={})
     }, 0);
   };
 
-  Interactive.register("setup", function(params) {
-    params.code = CoffeeScript.compile(params.source);
-    return exec(params);
-  });
-
-  Interactive.register("setup-js", function(params) {
-    params.code = params.source;
-    return exec(params);
-  });
-
   $(function() {
-    return findInteractiveElements();
+    Interactive.register("setup", function(params) {
+      params.code = CoffeeScript.compile(params.source);
+      return exec(params);
+    });
+    return Interactive.register("setup-js", function(params) {
+      params.code = params.source;
+      return exec(params);
+    });
   });
 
 }).call(this);
 
-//# sourceURL=interactive.coffee
 </script><script src="package.js"></script>
 </body>
 </html>
