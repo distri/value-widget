@@ -1,0 +1,12 @@
+CACHE MANIFEST
+# 1425505246704
+
+CACHE:
+index.html
+../value-before-options.json.js
+
+
+NETWORK:
+https://*
+http://*
+*
