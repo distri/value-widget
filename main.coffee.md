@@ -41,11 +41,11 @@ Tie a widget to an observable.
           console.log data
 
         if data.status is "ready"
-          if I.options
-            send "options", I.options
-
           if I.value?
             update(I.value)
+
+          if I.options
+            send "options", I.options
 
         else if data.status is "unload"
           window.removeEventListener "message", listener
